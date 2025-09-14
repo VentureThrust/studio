@@ -3,10 +3,8 @@
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
 
 export default function Header() {
-  const router = useRouter();
 
   return (
     <header className="bg-card shadow-sm sticky top-0 z-40">

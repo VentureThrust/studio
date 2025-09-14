@@ -69,20 +69,26 @@ export async function submitDiligenceReport(formData: FormData) {
       documents: documentUrls,
     });
 
-    // Call GenAI flow
-    const reportResult = await generateDueDiligenceReport({
+    // Run report generation in the background, don't await it
+    generateDueDiligenceReport({
       ...basicDetails,
       ...documentDataURIs,
-    });
-
-    await updateDoc(doc(db, 'submissions', submissionRef.id), {
-      report: reportResult.report,
-      status: 'completed',
+    }).then(reportResult => {
+      updateDoc(doc(db, 'submissions', submissionRef.id), {
+        report: reportResult.report,
+        status: 'completed',
+      });
+      revalidatePath('/dashboard');
+      revalidatePath(`/dashboard/submissions/${submissionRef.id}`);
+    }).catch(error => {
+       console.error('Report generation error:', error);
+       updateDoc(doc(db, 'submissions', submissionRef.id), {
+        report: `Error generating report: ${error.message}`,
+        status: 'error',
+      });
     });
 
     revalidatePath('/dashboard');
-    revalidatePath(`/dashboard/submissions/${submissionRef.id}`);
-
     return { success: true, submissionId: submissionRef.id };
   } catch (error: any) {
     console.error('Submission error:', error);

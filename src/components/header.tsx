@@ -18,7 +18,7 @@ export default function Header() {
         
         <div className="flex items-center gap-4">
            <Button asChild>
-              <Link href="/diligence/new">Get Started</Link>
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
         </div>
       </nav>

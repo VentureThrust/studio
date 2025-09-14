@@ -1,7 +1,6 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import { BasicDetails, Documents } from '@/lib/types';
 import BasicDetailsForm from './_components/basic-details-form';
@@ -12,11 +11,8 @@ import { Progress } from '@/components/ui/progress';
 import { submitDiligenceReport } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 
 export default function NewDiligencePage() {
-    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
 
@@ -24,26 +20,6 @@ export default function NewDiligencePage() {
     const [submitting, setSubmitting] = useState(false);
     const [basicDetails, setBasicDetails] = useState<BasicDetails | null>(null);
     const [documents, setDocuments] = useState<Documents>({});
-
-    if (authLoading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
-
-    if (!user) {
-        return (
-            <div className="container text-center py-20">
-                <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
-                <p className="text-muted-foreground mb-6">Please sign in to start the due diligence process.</p>
-                <Button asChild>
-                    <Link href="/auth">Sign In</Link>
-                </Button>
-            </div>
-        );
-    }
 
     const handleNextStep1 = (data: BasicDetails) => {
         setBasicDetails(data);

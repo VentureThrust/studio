@@ -25,6 +25,9 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
+                <Button asChild variant="outline" size="lg">
+                    <Link href="/dashboard">View Dashboard</Link>
+                </Button>
               </div>
             </div>
             <Image

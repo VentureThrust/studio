@@ -1,85 +1,94 @@
-"use server";
+'use server';
 
-import { auth, db, storage } from "./firebase";
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { generateDueDiligenceReport } from "@/ai/flows/generate-due-diligence-report";
-import { revalidatePath } from "next/cache";
-import { DocumentType, Industry, IndustryDocuments } from "./types";
+import { db, storage } from './firebase';
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  doc,
+  updateDoc,
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { generateDueDiligenceReport } from '@/ai/flows/generate-due-diligence-report';
+import { revalidatePath } from 'next/cache';
+import { DocumentType, Industry, IndustryDocuments } from './types';
 
 // Helper function to convert file to data URI for GenAI
 async function fileToDataURI(file: File): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const mime = file.type;
-    const base64 = buffer.toString('base64');
-    return `data:${mime};base64,${base64}`;
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const mime = file.type;
+  const base64 = buffer.toString('base64');
+  return `data:${mime};base64,${base64}`;
 }
 
-
 export async function submitDiligenceReport(formData: FormData) {
-    const { currentUser } = auth;
-    if (!currentUser) {
-        return { success: false, error: "Authentication required." };
+  // Hardcoded user for submissions since auth is removed.
+  const userId = 'default-user';
+
+  try {
+    const basicDetails = {
+      startupName: formData.get('startupName') as string,
+      email: formData.get('email') as string,
+      yearOfRegistration: Number(formData.get('yearOfRegistration')),
+      numberOfEmployees: Number(formData.get('numberOfEmployees')),
+      field: formData.get('field') as Industry,
+    };
+
+    const submissionRef = await addDoc(collection(db, 'submissions'), {
+      userId: userId,
+      createdAt: serverTimestamp(),
+      ...basicDetails,
+      documents: {},
+      report: 'Generating...',
+      status: 'processing',
+    });
+
+    const requiredDocs = IndustryDocuments[basicDetails.field];
+    const documentUrls: Partial<Record<DocumentType, string>> = {};
+    const documentDataURIs: Partial<Record<DocumentType, string>> = {};
+
+    for (const docType of requiredDocs) {
+      const file = formData.get(docType) as File | null;
+      if (file) {
+        // Upload to Firebase Storage
+        const storageRef = ref(
+          storage,
+          `submissions/${submissionRef.id}/${docType}-${file.name}`
+        );
+        const uploadTask = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(uploadTask.ref);
+        documentUrls[docType] = downloadURL;
+
+        // Convert to data URI for GenAI
+        documentDataURIs[docType] = await fileToDataURI(file);
+      }
     }
 
-    try {
-        const basicDetails = {
-            startupName: formData.get('startupName') as string,
-            email: formData.get('email') as string,
-            yearOfRegistration: Number(formData.get('yearOfRegistration')),
-            numberOfEmployees: Number(formData.get('numberOfEmployees')),
-            field: formData.get('field') as Industry,
-        };
-        
-        const submissionRef = await addDoc(collection(db, "submissions"), {
-            userId: currentUser.uid,
-            createdAt: serverTimestamp(),
-            ...basicDetails,
-            documents: {},
-            report: "Generating...",
-            status: "processing"
-        });
+    await updateDoc(doc(db, 'submissions', submissionRef.id), {
+      documents: documentUrls,
+    });
 
-        const requiredDocs = IndustryDocuments[basicDetails.field];
-        const documentUrls: Partial<Record<DocumentType, string>> = {};
-        const documentDataURIs: Partial<Record<DocumentType, string>> = {};
+    // Call GenAI flow
+    const reportResult = await generateDueDiligenceReport({
+      ...basicDetails,
+      ...documentDataURIs,
+    });
 
-        for (const docType of requiredDocs) {
-            const file = formData.get(docType) as File | null;
-            if (file) {
-                // Upload to Firebase Storage
-                const storageRef = ref(storage, `submissions/${submissionRef.id}/${docType}-${file.name}`);
-                const uploadTask = await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(uploadTask.ref);
-                documentUrls[docType] = downloadURL;
+    await updateDoc(doc(db, 'submissions', submissionRef.id), {
+      report: reportResult.report,
+      status: 'completed',
+    });
 
-                // Convert to data URI for GenAI
-                documentDataURIs[docType] = await fileToDataURI(file);
-            }
-        }
-        
-        await updateDoc(doc(db, "submissions", submissionRef.id), {
-            documents: documentUrls,
-        });
+    revalidatePath('/dashboard');
+    revalidatePath(`/dashboard/submissions/${submissionRef.id}`);
 
-        // Call GenAI flow
-        const reportResult = await generateDueDiligenceReport({
-            ...basicDetails,
-            ...documentDataURIs
-        });
-
-        await updateDoc(doc(db, "submissions", submissionRef.id), {
-            report: reportResult.report,
-            status: "completed"
-        });
-        
-        revalidatePath('/dashboard');
-        revalidatePath(`/dashboard/submissions/${submissionRef.id}`);
-
-        return { success: true, submissionId: submissionRef.id };
-    } catch (error: any) {
-        console.error("Submission error:", error);
-        return { success: false, error: error.message || "Failed to submit diligence report." };
-    }
+    return { success: true, submissionId: submissionRef.id };
+  } catch (error: any) {
+    console.error('Submission error:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to submit diligence report.',
+    };
+  }
 }

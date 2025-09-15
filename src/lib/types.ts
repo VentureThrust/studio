@@ -34,13 +34,23 @@ export const BasicDetailsSchema = z.object({
 
 export type BasicDetails = z.infer<typeof BasicDetailsSchema>;
 
-export type DocumentType = 
-    | 'registrationCertificate'
-    | 'rbiLicense'
-    | 'balanceSheet'
-    | 'clinicalLicense'
-    | 'employeeRecords'
-    | 'employeeProof';
+export type DocumentType =
+  | 'registrationCertificate'
+  | 'rbiLicense'
+  | 'balanceSheet'
+  | 'clinicalLicense'
+  | 'employeeRecords'
+  | 'employeeProof'
+  | 'articlesOfIncorporation'
+  | 'businessPlan'
+  | 'financialStatements'
+  | 'taxReturns'
+  | 'intellectualProperty'
+  | 'shareholderAgreement'
+  | 'customerContracts'
+  | 'vendorContracts'
+  | 'insurancePolicies'
+  | 'capTable';
 
 export const DocumentLabels: Record<DocumentType, string> = {
     registrationCertificate: 'Registration Certificate',
@@ -49,29 +59,53 @@ export const DocumentLabels: Record<DocumentType, string> = {
     clinicalLicense: 'Clinical License',
     employeeRecords: 'Employee Records',
     employeeProof: 'Employee Proof',
+    articlesOfIncorporation: 'Articles of Incorporation',
+    businessPlan: 'Business Plan',
+    financialStatements: 'Financial Statements (3 years)',
+    taxReturns: 'Tax Returns (3 years)',
+    intellectualProperty: 'IP Agreements/Patents',
+    shareholderAgreement: 'Shareholder Agreement',
+    customerContracts: 'Sample Customer Contracts',
+    vendorContracts: 'Sample Vendor Contracts',
+    insurancePolicies: 'Insurance Policies',
+    capTable: 'Capitalization Table'
 }
 
+const standardDocs: DocumentType[] = [
+    'registrationCertificate', 
+    'balanceSheet', 
+    'employeeProof', 
+    'articlesOfIncorporation',
+    'businessPlan',
+    'financialStatements',
+    'taxReturns',
+    'shareholderAgreement',
+    'insurancePolicies',
+    'capTable'
+];
+
+
 export const IndustryDocuments: Record<Industry, DocumentType[]> = {
-    'FinTech': ['registrationCertificate', 'rbiLicense', 'balanceSheet'],
-    'HealthTech': ['registrationCertificate', 'clinicalLicense', 'employeeRecords'],
-    'EdTech': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'AgriTech': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'E-commerce': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'SaaS': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'AI/ML': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'Blockchain': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'CleanTech': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'Gaming': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'IoT': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'Robotics': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'Cybersecurity': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'Biotech': ['registrationCertificate', 'clinicalLicense', 'employeeRecords'],
-    'Real Estate Tech': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'FoodTech': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'TravelTech': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'Media/Entertainment': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'Social Media': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
-    'General Startup': ['registrationCertificate', 'balanceSheet', 'employeeProof'],
+    'FinTech': ['registrationCertificate', 'rbiLicense', 'balanceSheet', 'financialStatements', 'taxReturns', 'cybersecurity', 'businessPlan', 'capTable', 'shareholderAgreement', 'insurancePolicies', 'customerContracts'],
+    'HealthTech': ['registrationCertificate', 'clinicalLicense', 'employeeRecords', 'balanceSheet', 'financialStatements', 'taxReturns', 'businessPlan', 'capTable', 'shareholderAgreement', 'insurancePolicies', 'intellectualProperty'],
+    'Biotech': ['registrationCertificate', 'clinicalLicense', 'employeeRecords', 'balanceSheet', 'financialStatements', 'taxReturns', 'businessPlan', 'capTable', 'shareholderAgreement', 'insurancePolicies', 'intellectualProperty'],
+    'EdTech': standardDocs,
+    'AgriTech': standardDocs,
+    'E-commerce': standardDocs,
+    'SaaS': standardDocs,
+    'AI/ML': [...standardDocs, 'intellectualProperty'],
+    'Blockchain': [...standardDocs, 'intellectualProperty'],
+    'CleanTech': standardDocs,
+    'Gaming': [...standardDocs, 'intellectualProperty'],
+    'IoT': [...standardDocs, 'intellectualProperty'],
+    'Robotics': [...standardDocs, 'intellectualProperty'],
+    'Cybersecurity': [...standardDocs, 'intellectualProperty'],
+    'Real Estate Tech': standardDocs,
+    'FoodTech': standardDocs,
+    'TravelTech': standardDocs,
+    'Media/Entertainment': [...standardDocs, 'intellectualProperty'],
+    'Social Media': standardDocs,
+    'General Startup': standardDocs,
 };
 
 export type Documents = Partial<Record<DocumentType, File>>;

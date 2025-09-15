@@ -56,7 +56,7 @@ export default function ReviewStep({ basicDetails, documents, onBack, onSubmit, 
                             <li key={type} className="flex items-center justify-between p-2 rounded-md bg-secondary">
                                 <div className="flex items-center gap-2">
                                     <File className="h-4 w-4 text-muted-foreground" />
-                                    <span>{DocumentLabels[type as DocumentType]}</span>
+                                    <span>{DocumentLabels[type as DocumentType] || type}</span>
                                 </div>
                                 <span className="text-muted-foreground truncate max-w-[200px]">{file.name}</span>
                             </li>

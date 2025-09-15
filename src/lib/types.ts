@@ -52,7 +52,7 @@ export type DocumentType =
   | 'insurancePolicies'
   | 'capTable';
 
-export const DocumentLabels: Record<DocumentType, string> = {
+export const DocumentLabels: Record<string, string> = {
     registrationCertificate: 'Registration Certificate',
     rbiLicense: 'RBI License',
     balanceSheet: 'Balance Sheet',
@@ -108,4 +108,4 @@ export const IndustryDocuments: Record<Industry, DocumentType[]> = {
     'General Startup': standardDocs,
 };
 
-export type Documents = Partial<Record<DocumentType, File>>;
+export type Documents = Partial<Record<string, File>>;
